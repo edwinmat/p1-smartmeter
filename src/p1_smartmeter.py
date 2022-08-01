@@ -5,7 +5,7 @@
 Read data from a Smartmeter's P1 port and publish it via MQTT
 """
 
-import paho.mqtt.client as mqtt
+# import paho.mqtt.client as mqtt
 import time
 import serial
 import re
@@ -138,7 +138,7 @@ def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
 
             if sendmsg is True:
                 debug_msg("mqtt topic: {}, value: {}".format(topic, value))
-                publish_message(mqttc, topic, value)
+                # publish_message(mqttc, topic, value)
     except KeyError:
         warning_msg(
             "OBIS refence {} is not available in the configuration file".format(
@@ -175,35 +175,35 @@ def parse_value(value):
     return value
 
 
-def recon():
-    if reconnect_counter > 5:
-        sys.exit(1)
-
-    try:
-        mqttc.reconnect()
-        info_msg("Successful reconnected to the MQTT server")
-    except:
-        error_msg("Could not reconnect to the MQTT server")
-
-
-def on_connect(client, userdata, flags, rc):
-    info_msg("Successful connected to the MQTT server")
+# def recon():
+#     if reconnect_counter > 5:
+#         sys.exit(1)
+#
+#     try:
+#         mqttc.reconnect()
+#         info_msg("Successful reconnected to the MQTT server")
+#     except:
+#         error_msg("Could not reconnect to the MQTT server")
 
 
-def on_disconnect(client, userdata, rc):
-    if rc != 0:
-        warning_msg("Unexpected disconnection from MQTT, trying to reconnect")
-        recon()
+# def on_connect(client, userdata, flags, rc):
+#     info_msg("Successful connected to the MQTT server")
 
 
-def publish_message(mqttc, mqtt_path, msg):
-    mqttc.publish(mqtt_path, payload=msg, qos=0, retain=False)
-    time.sleep(0.1)
-    debug_msg(
-        "published message {0} on topic {1} at {2}".format(
-            msg, mqtt_path, time.asctime(time.localtime(time.time()))
-        )
-    )
+# def on_disconnect(client, userdata, rc):
+#     if rc != 0:
+#         warning_msg("Unexpected disconnection from MQTT, trying to reconnect")
+#         recon()
+
+
+# def publish_message(mqttc, mqtt_path, msg):
+#     mqttc.publish(mqtt_path, payload=msg, qos=0, retain=False)
+#     time.sleep(0.1)
+#     debug_msg(
+#         "published message {0} on topic {1} at {2}".format(
+#             msg, mqtt_path, time.asctime(time.localtime(time.time()))
+#         )
+#     )
 
 
 def read_config(configfile):
@@ -227,26 +227,26 @@ def main():
     debug = config["debug"]
 
     # Connect to the MQTT broker
-    mqttc = mqtt.Client("smartmeter")
-    mqttc.username_pw_set(
-        username=config["mqtt_username"], password=config["mqtt_password"]
-    )
+    # mqttc = mqtt.Client("smartmeter")
+    # mqttc.username_pw_set(
+    #     username=config["mqtt_username"], password=config["mqtt_password"]
+    # )
 
     # Define the mqtt callbacks
-    mqttc.on_connect = on_connect
-    mqttc.on_disconnect = on_disconnect
+    # mqttc.on_connect = on_connect
+    # mqttc.on_disconnect = on_disconnect
 
     # Connect to the MQTT server
-    try:
-        mqttc.connect(config["mqtt_host"], port=1883, keepalive=45)
-    except Exception as err:
-        error_msg("could not connect to the mqtt host: {}".format(err))
+    # try:
+    #     mqttc.connect(config["mqtt_host"], port=1883, keepalive=45)
+    # except Exception as err:
+    #     error_msg("could not connect to the mqtt host: {}".format(err))
 
-    info_msg(
-        "succesful connected to the mqtt host {}:{}".format(
-            config["mqtt_host"], "1883"
-        )
-    )
+    # info_msg(
+    #     "succesful connected to the mqtt host {}:{}".format(
+    #         config["mqtt_host"], "1883"
+    #     )
+    # )
 
     # Open the serial port
     try:
@@ -264,10 +264,10 @@ def main():
     obis_dict = config["obis"]
 
     try:
-        read_p1(ser, mqttc, mqtt_topic_base, obis_dict)
+        read_p1(ser, None, mqtt_topic_base, obis_dict)
         pass
     except KeyboardInterrupt:
-        mqttc.loop_stop()
+        # mqttc.loop_stop()
         ser.close()
 
 
