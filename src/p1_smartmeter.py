@@ -8,6 +8,7 @@ Read data from a Smartmeter's P1 port and publish it via MQTT
 # import paho.mqtt.client as mqtt
 import time
 import serial
+from influxdb import InfluxDBClient
 import re
 import sys
 import yaml
@@ -47,7 +48,7 @@ def error_msg(message):
     sys.exit(99)
 
 
-def read_p1(ser, mqttc, mqtt_topic_base, obis_dict):
+def read_p1(ser, mqttc, influxc, db_name, mqtt_topic_base, obis_dict):
     debug_msg("entered function read_p1")
 
     if not ser.isOpen():
@@ -57,10 +58,10 @@ def read_p1(ser, mqttc, mqtt_topic_base, obis_dict):
         line = ser.readline().decode(encoding="UTF-8", errors="strict").strip()
 
         debug_msg(line)
-        parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line)
+        parse_p1_data(mqttc, influxc, db_name, mqtt_topic_base, obis_dict, line)
 
 
-def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
+def parse_p1_data(mqttc, influxc, db_name, mqtt_topic_base, obis_dict, line):
     # Example: 0-1:24.2.1(181007192000S)(00004.239*m3)
 
     # Split on (
@@ -137,8 +138,9 @@ def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
                     sendmsg = False
 
             if sendmsg is True:
-                info_msg("mqtt topic: {}, value: {}".format(topic, value))
+                # info_msg("mqtt topic: {}, value: {}".format(topic, value))
                 # publish_message(mqttc, topic, value)
+                store_message(influxc, db_name, obis_dict[obis_ref]["mqtt_topic"], value)
     except KeyError:
         warning_msg(
             "OBIS refence {} is not available in the configuration file".format(
@@ -206,6 +208,20 @@ def parse_value(value):
 #     )
 
 
+def store_message(influx_client, db_name, parameter, value):
+    data_point = {
+        "measurement": "smartmeter",
+        "fields": {
+            "value": value
+        },
+        "tags": {
+            "parameter": parameter
+        }
+    }
+
+    influx_client.write_points(points=[data_point], database=db_name, batch_size=100)
+
+
 def read_config(configfile):
     try:
         with open(configfile, "r") as ymlfile:
@@ -248,6 +264,13 @@ def main():
     #     )
     # )
 
+    influxdb_client = InfluxDBClient(
+        host=config["db_host"],
+        port=config["db_port"],
+        database=config["db_name"],
+        ssl=config["db_use_ssl"]
+    )
+
     # Open the serial port
     try:
         ser = serial.Serial(
@@ -264,7 +287,7 @@ def main():
     obis_dict = config["obis"]
 
     try:
-        read_p1(ser, None, mqtt_topic_base, obis_dict)
+        read_p1(ser, None, influxdb_client, config["db_name"], mqtt_topic_base, obis_dict)
         pass
     except KeyboardInterrupt:
         # mqttc.loop_stop()
