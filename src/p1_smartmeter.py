@@ -116,7 +116,7 @@ def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
                 stored_value = obis_dict[obis_ref].get("value", 0)
                 obis_dict[obis_ref]["value"] = stored_value + value
 
-                if counter is 1:
+                if counter == 1:
                     sendmsg = True
                     obis_dict[obis_ref]["counter"] = average
                     value = obis_dict[obis_ref]["value"] / average
@@ -128,7 +128,7 @@ def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
 
             if not count is False:
                 counter = obis_dict[obis_ref].get("counter", count)
-                if counter is 1:
+                if counter == 1:
                     sendmsg = True
                     obis_dict[obis_ref]["counter"] = count
                 else:
@@ -137,7 +137,7 @@ def parse_p1_data(mqttc, mqtt_topic_base, obis_dict, line):
                     sendmsg = False
 
             if sendmsg is True:
-                debug_msg("mqtt topic: {}, value: {}".format(topic, value))
+                info_msg("mqtt topic: {}, value: {}".format(topic, value))
                 # publish_message(mqttc, topic, value)
     except KeyError:
         warning_msg(
@@ -209,7 +209,7 @@ def parse_value(value):
 def read_config(configfile):
     try:
         with open(configfile, "r") as ymlfile:
-            cfg = yaml.load(ymlfile)
+            cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
     except Exception as err:
         error_msg("could not open/read config file {}: {}".format(configfile, err))
 
