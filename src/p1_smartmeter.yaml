@@ -11,11 +11,25 @@ obis:
     description: 'Number of devices on the M-Bus'
     publish: False
     mqtt_topic: 'notset'
+  0-2:24.1.0:
+    description: 'Number of devices on the M-Bus'
+    publish: False
+    mqtt_topic: 'notset'
   0-1:96.1.0:
     description: 'Gasmeter identifier'
     publish: False
     mqtt_topic: 'notset'
+  0-2:96.1.0:
+    description: 'Gasmeter identifier'
+    publish: False
+    mqtt_topic: 'notset'
   0-1:24.2.1:
+    description: 'Gasmeter data'
+    publish: True
+    count: 60
+    mqtt_topic: 'gasmeter'
+    value_field: 2
+  0-2:24.2.1:
     description: 'Gasmeter data'
     publish: True
     count: 60
@@ -110,6 +124,10 @@ obis:
     count: 60
     mqtt_topic: 'l3_voltage_swells'
   0-0:96.13.0:
+    description: 'Text message max 1024 characters.'
+    publish: False
+    mqtt_topic: 'notset'
+  0-0:96.13.1:
     description: 'Text message max 1024 characters.'
     publish: False
     mqtt_topic: 'notset'
